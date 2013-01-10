@@ -1,0 +1,42 @@
+body {
+  font-family: sans-serif;
+}
+
+.hidden {
+  display: none;
+}
+
+#status {
+  background: #DDD;
+  border: 1px solid #CCC;
+  padding: 2px;
+}
+
+.datatable {
+  border-spacing: 0px;
+  border-collapse: collapse;
+}  
+
+.datatable td,
+.datatable th {
+  border: 1px solid #CCC;
+  padding: 1px;
+  margin: 0px;
+}
+
+.expando {
+  padding-left: 15px;
+  background-image: url(tablesorter/themes/blue/asc.gif);
+  background-repeat: no-repeat;
+  background-position: center left;
+  cursor: pointer;
+}
+
+.expando.collapsed {
+  background-image: url(tablesorter/themes/blue/desc.gif);
+}
+
+.error {
+  color: red;
+  font-style: italic;
+}

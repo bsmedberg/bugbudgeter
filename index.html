@@ -1,0 +1,59 @@
+<head>
+  <title>Plugins Module Summary Dashboard</title>
+
+  <link href="common.css" type="text/css" rel="stylesheet">
+
+<body>
+  <h1>Plugins Module Summary Dashboard</h1>
+
+  <div id="login">
+    <p><em>Your bugzilla password is optional, it allows you to see security bugs which are normally hidden, as well as bug owner email addresses. It is only used locally, not sent to any server other than bugzilla.mozilla.org.</em>
+    <form id="loginform" action="#" onsubmit="fetchQ(); return false;"><input type="text" id="bz_username" placeholder="Bugzilla email"><input type="password" id="bz_password" placeholder="Bugzilla password"> <input type="submit" id="fetch" value="Fetch bugs now"></form>
+  </div>
+
+  <p id="status">Initializing...</p>
+
+  <div id="body" class="hidden">
+
+  <h2>Requests</h2>
+
+  <table id="requests" class="datatable tablesorter">
+    <thead>
+      <th>Bug#
+      <th>Type
+      <th>Age
+      <th title="Priority">P
+      <th>Details
+      <th>Requested By
+      <th>Requested Of
+    <tbody id="requestsBody">
+  </table>
+
+  <h2>Bugs</h2>
+
+  <dl>
+    <dt>P1 <dd>drop other work, fix ASAP
+    <dt>P2 <dd>assigned bug, important
+    <dt>P3 <dd>Queue of bugs that should be fixed
+    <dt>P4 <dd>Unused
+    <dt>P5 <dd>Valid bug, but not important
+  </dl>
+
+  <table id="bugs" class="datatable tablesorter hidden">
+    <thead>
+      <th>Bug#
+      <th title="Priority">P
+      <th>Product/Component
+      <th>Owner
+      <th>Summary
+      <th title="Attachments, flags, keywords, whiteboard, and all that stuff">Status
+      <th>Last Changed
+    <tbody id="bugsbody">
+  </table>
+
+  </div>
+
+  <script type="application/javascript" src="jquery-1.7.2.min.js"></script>
+  <script type="application/javascript" src="tablesorter/jquery.tablesorter.min.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <script type="text/javascript" src="moduletriage.js"></script>
