@@ -40,3 +40,8 @@ body {
   color: red;
   font-style: italic;
 }
+
+dl.tablelist > dt {
+  clear: left;
+  float: left;
+}

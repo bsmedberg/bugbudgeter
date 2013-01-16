@@ -2,6 +2,7 @@
   <title>Plugins Module Summary Dashboard</title>
 
   <link href="common.css" type="text/css" rel="stylesheet">
+  <link href="tablesorter/themes/blue/style.css" type="text/css" rel="stylesheet">
 
 <body>
   <h1>Plugins Module Summary Dashboard</h1>
@@ -15,6 +16,7 @@
 
   <div id="body" class="hidden">
 
+  <!--
   <h2>Requests</h2>
 
   <table id="requests" class="datatable tablesorter">
@@ -28,25 +30,29 @@
       <th>Requested Of
     <tbody id="requestsBody">
   </table>
+  -->
 
   <h2>Bugs</h2>
 
-  <dl>
+  <dl class="tablelist">
     <dt>P1 <dd>drop other work, fix ASAP
-    <dt>P2 <dd>assigned bug, important
+    <dt>P2 <dd>assigned bug to be fixed this cycle
     <dt>P3 <dd>Queue of bugs that should be fixed
     <dt>P4 <dd>Unused
     <dt>P5 <dd>Valid bug, but not important
   </dl>
 
-  <table id="bugs" class="datatable tablesorter hidden">
+  <p><input type="text" placeholder="Enter text to filter bugs" class="tablefilter"> <span class="filtertotal"></span>
+
+  <table id="bugs" class="datatable tablesorter">
     <thead>
       <th>Bug#
+      <th title="Status">S
       <th title="Priority">P
       <th>Product/Component
       <th>Owner
       <th>Summary
-      <th title="Attachments, flags, keywords, whiteboard, and all that stuff">Status
+      <th title="Attachments, flags, keywords, whiteboard, and all that stuff">Meta
       <th>Last Changed
     <tbody id="bugsbody">
   </table>

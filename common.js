@@ -1,6 +1,6 @@
-const bzapi = 'https://api-dev.bugzilla.mozilla.org/1.1';
+const bzapi = 'https://api-dev.bugzilla.mozilla.org/1.2';
 
-const useCached = true;
+const useCached = false;
 
 var gConfiguration;
 
@@ -42,6 +42,13 @@ function log(text)
   logtext += text;
 }
 
+$.fn.isAfter = function(elem) {
+  if (typeof(elem) == "string") {
+    elem = $(elem);
+  }
+  return this.add(elem).index(elem) == 0;
+};
+
 // Given a dictionary, return its keys sorted alphabetically
 function sortKeys(dict) {
   var r = [];
@@ -79,8 +86,6 @@ function makeRequest(settings)
   addLoginData(query);
   
   var url = parts.join('/') + '?' + $.param(query, true);
-
-  log('Making request to ' + url);
 
   var httpMethod = settings.httpMethod;
   if (httpMethod === undefined)
@@ -125,7 +130,6 @@ else {
     makeRequest({
       method: 'configuration',
       success: function(data) {
-        log('Got configuration response');
         gConfiguration = data;
         cb();
       }
@@ -165,3 +169,34 @@ function setExpandos(idlist)
     }
   });
 }
+
+$(document).on('input', '.tablefilter', function() {
+  var input = this;
+  var words = $(input).val().split(/\s+/);
+
+  // first table after this in DOM position
+  var table = $('table').filter(function() {
+    return $(this).isAfter(input);
+  }).first();
+
+  var shown = 0;
+  var rows = $('tbody tr', table).each(function() {
+    var t = $(this).text();
+    for (var i = 0; i < words.length; ++i) {
+      if (t.indexOf(words[i]) == -1) {
+        $(this).hide();
+        return;
+      }
+    }
+    $(this).show();
+    ++shown;
+  });
+  var totaltext;
+  if (shown == rows.length) {
+    totaltext = '';
+  }
+  else {
+    totaltext = "Showing " + shown + " of " + rows.length;
+  }
+  $(this).nextAll('.filtertotal').text(totaltext);
+});
