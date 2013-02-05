@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-const kComponents = {
-  "Plugins": null, /* all bugs in "Plugins" */
+var kComponents = {
+  "Core": ["Plug-ins"],
+
+/*
+  "Plugins": null, // all bugs in "Plugins"
   "Core": [
     "Plug-ins",
     "XPCOM",
@@ -33,7 +36,39 @@ const kComponents = {
   "Firefox": [
     "WinQual Reports",
   ],
+*/
 };
+
+var kFetchTags = [
+  'CtPDefault',
+  'CtPUR',
+];
+
+var kWhiteboardTags = {
+  "CtPUR": ["+", "-", "?"],
+  "CtPDefault": ["P1", "P2", "P3", "-", "?"],
+  "Snappy": ["P1", "P2", "P3", "-", "?"]
+}
+
+function makeWhiteboardRE(tag)
+{
+  return new RegExp('\\[' + escapeRegExp(tag) + ':([^\\]]*)\\]', 'i');
+}
+
+function replaceOrAddWhiteboardTag(whiteboard, tag, value)
+{
+  var newval = '[' + tag + ':' + value + ']';
+
+  var re = makeWhiteboardRE(tag);
+  var r = re.exec(whiteboard);
+  if (r === null) {
+    if (whiteboard == '') {
+      return newval;
+    }
+    return newval + ' ' + whiteboard;
+  }
+  return whiteboard.replace(re, newval);
+}
 
 var gBugs;
 var gPending;
@@ -50,10 +85,14 @@ function fetchQ()
 }
 
 var kCF = /^cf_(status|tracking|blocking)/;
+var kCFFirefox = /^cf_tracking_firefox(\d+)/;
 var gFields;
+var gCurrentTracking = 0;
+
 function setFieldData()
 {
   var fields = [
+    'update_token',
     'assigned_to',
     'component',
     'id',
@@ -71,6 +110,13 @@ function setFieldData()
     if (kCF.test(field)) {
       fields.push(field);
     }
+    var r = kCFFirefox.exec(field);
+    if (r != null) {
+      var n = parseInt(r[1]);
+      if (n > gCurrentTracking) {
+        gCurrentTracking = n;
+      }
+    }
   }
   gFields = fields.join(',');
 }
@@ -82,8 +128,20 @@ function setFieldData()
 // Fetching everything at once either ends up using too much memory on the
 // BzAPI server, or exceeding URL length limits.
 
-const kShard = 25;
-var gPendingBugs = [];
+var kShard = 25;
+var gPendingBugs;
+var gPendingMap;
+
+function fetchBugList(list)
+{
+  $.each(list, function(i, bug) {
+    if (bug.id in gPendingMap) {
+      return;
+    }
+    gPendingMap[bug.id] = true;
+    gPendingBugs.push(bug.id);
+  });
+}
 
 function fetchBugs()
 {
@@ -91,8 +149,12 @@ function fetchBugs()
 
   gPending = 0;
   gPendingShards = 0;
+  gPendingBugs = [];
+  gPendingMap = {};
 
   gBugs = { };
+
+  var qlist = []
 
   $.each(kComponents, function(product, components) {
     var q = {
@@ -103,14 +165,39 @@ function fetchBugs()
     if (components !== null) {
       q["component"] = components;
     }
+    qlist.push(q);
+
+    q = {
+      "product": product,
+      "include_fields": "id",
+    };
+    if (components !== null) {
+      q["component"] = components;
+    }
+    for (var version = gCurrentTracking;
+         version > gCurrentTracking - 3;
+         --version) {
+      q["cf_tracking_firefox" + version] = "+";
+    }
+    qlist.push(q);
+  });
+
+  $.each(kFetchTags, function(i, tag) {
+    var q = {
+      "resolution": "---",
+      "whiteboard": tag,
+      "whiteboard_type": "contains",
+    };
+    qlist.push(q);
+  });
+
+  $.each(qlist, function(i, q) {
     gPending++;
     makeRequest({
       method: 'bug',
       query: q,
       success: function(d) {
-        $.each(d.bugs, function(i, bug) {
-          gPendingBugs.push(bug.id);
-        });
+        fetchBugList(d.bugs);
         --gPending;
         fetchShards();
       }
@@ -194,26 +281,144 @@ function setupTable()
     return;
   }
 
+  var insertBefore = $('#meta-th');
+  $.each(kWhiteboardTags, function(tag) {
+    insertBefore.before($('<th>').text(tag));
+  });
+
+  $.each([gCurrentTracking - 2, gCurrentTracking - 1, gCurrentTracking],
+    function(i, tracking) {
+      insertBefore.before($('<th>').text('t-' + tracking).attr("title", "tracking-firefox-" + tracking));
+    });
+
+  var rowTemplate = $('<tr><td class="bugid"><a class="buglink"><td class="bugStatus"><td class="bugP"><td class="bugComponent"><td class="bugOwner"><td class="bugSummary">');
+  $.each(kWhiteboardTags, function(tag) {
+    rowTemplate.append($('<td class="bugwb">').attr('wbtag', tag));
+  });
+  $.each([gCurrentTracking - 2, gCurrentTracking - 1, gCurrentTracking],
+         function(i, tracking) {
+    rowTemplate.append($('<td class="bugtracking">').attr('tracking', tracking));
+  });
+  rowTemplate.append($('<td class="bugMeta"><td class="bugChanged">'));
+
   var tbody = $('#bugsbody');
   $.each(gBugs, function(id, bug) {
-    var row = $('<tr>')
-      .append($('<td class="bugid">').append($('<a>').attr('href', 'https://bugzilla.mozilla.org/show_bug.cgi?id=' + id).text(id)))
-      .append($('<td class="bugStatus">').text(bug.status.slice(0, 4)))
-      .append($('<td class="bugP">').text(makeBugPriority(bug)))
-      .append($('<td class="bugComponent">').text(bug.product + "/" + bug.component))
-      .append($('<td class="bugOwner">').append(makeUser(bug.assigned_to)))
-      .append($('<td class="bugSummary">').text(bug.summary))
-      .append($('<td class="bugMeta">').text(makeMeta(bug)))
-      .append($('<td class="bugChanged">').text(bug.last_change_time.slice(0, 10)));
+    var row = rowTemplate.clone().data('bugid', id);
+    bug.row = row;
     tbody.append(row);
+    updateRow(id);
+
   });
 
   var defaultSort = {
     sortList: [[2, 0], [0, 0]],
-    headers: {5: {sorter: false}, 6: {sorter: false}}
+    headers: {},
   };
+  defaultSort.headers[5] = {sorter: false};
+  defaultSort.headers[9 + Object.keys(kWhiteboardTags).length] = {sorter: false};
+
   $('.tablesorter').tablesorter(defaultSort);
 
   $('#body').removeClass('hidden');
   setStatus();
+}
+
+$(document).on('click', '.bugP', function(ev) {
+  ev.preventDefault();
+  if (gCurPopup && gCurPopup.element === this) {
+    closePopup();
+  } else {
+    var el = this;
+    openPopup({
+      element: this,
+      list: ["P--", "P1", "P2", "P3", "P5"],
+      value: $(this).text(),
+      listOnly: true,
+      success: function(value) {
+        var bugid = $(el).closest('tr').data('bugid');
+        var bug = gBugs[bugid];
+        if (value.match(/^P/)) {
+          bug.priority = value;
+        }
+        else {
+          bug.priority = '--';
+        }
+        updateRow(bugid);
+        updateBug(bug, ['priority']);
+      }});
+  }
+});
+
+$(document).on('click', '.bugwb', function(ev) {
+  ev.preventDefault();
+  if (gCurPopup && gCurPopup.element === this) {
+    closePopup();
+  } else {
+    var el = this;
+    var tag = $(el).attr('wbtag');
+    openPopup({
+      element: this,
+      list: kWhiteboardTags[tag],
+      value: $(this).text(),
+      listOnly: false,
+      success: function(value) {
+        var bugid = $(el).closest('tr').data('bugid');
+        var bug = gBugs[bugid];
+        bug.whiteboard = replaceOrAddWhiteboardTag(bug.whiteboard, tag, value);
+        updateRow(bugid);
+        updateBug(bug, ['whiteboard']);
+      }});
+  }
+});
+
+function updateRow(bugid)
+{
+  var bug = gBugs[bugid];
+  var row = bug.row;
+  row.find('.buglink').attr('href', 'https://bugzilla.mozilla.org/show_bug.cgi?id=' + bugid).text(bugid);
+  row.children('.bugStatus').text(bug.status.slice(0, 4));
+  row.children('.bugP').text(makeBugPriority(bug));
+  row.children('.bugComponent').text(bug.product + "/" + bug.component);
+  row.children('.bugOwner').empty().append(makeUser(bug.assigned_to));
+  row.children('.bugSummary').text(bug.summary);
+  row.children('.bugMeta').text(makeMeta(bug));
+  row.children('.bugChanged').text(bug.last_change_time.slice(0, 10));
+
+  $.each(kWhiteboardTags, function(tag) {
+    var cell = row.children('.bugwb').filter(function(el) { return $(this).attr('wbtag') == tag; });
+    
+    var r = makeWhiteboardRE(tag).exec(bug.whiteboard);
+
+    if (r === null) {
+      cell.text('')
+    }
+    else {
+      cell.text(r[1].toUpperCase());
+    }
+  });
+
+  $.each([gCurrentTracking - 2, gCurrentTracking - 1, gCurrentTracking],
+         function(i, tracking) {
+    var cell = row.children('.bugtracking').filter(function(el) { return $(this).attr('tracking') == tracking; });
+
+    var v = bug['cf_tracking_firefox' + tracking];
+    if (v === undefined || v == "---") {
+      v = '';
+    }
+    cell.text(v);
+  });
+}
+
+function updateBug(bug, fields)
+{
+  var o = {
+    token: bug.update_token
+  };
+  $.each(fields, function(i, field) {
+    o[field] = bug[field];
+  });
+  makeRequest({method: 'bug',
+               params: [bug.id],
+               httpMethod: 'PUT',
+               data: JSON.stringify(o)});
 }

@@ -14,6 +14,7 @@
   limitations under the License.
 -->
 <head>
+  <meta charset="UTF-8">
   <title>Plugins Module Summary Dashboard</title>
 
   <link href="common.css" type="text/css" rel="stylesheet">
@@ -61,17 +62,25 @@
 
   <table id="bugs" class="datatable tablesorter">
     <thead>
-      <th>Bug#
-      <th title="Status">S
-      <th title="Priority">P
-      <th>Product/Component
-      <th>Owner
-      <th>Summary
-      <th title="Attachments, flags, keywords, whiteboard, and all that stuff">Meta
-      <th>Last Changed
+      <tr>
+        <th>Bug#
+        <th title="Status">S
+        <th title="Priority">P
+        <th>Product/Component
+        <th>Owner
+        <th>Summary
+        <th id="meta-th" title="Attachments, flags, keywords, whiteboard, and all that stuff">Meta
+        <th>Last Changed
     <tbody id="bugsbody">
   </table>
 
+  </div>
+
+  <div id="popup">
+    <a id="popupclose" href="javascript:closePopup()">X</a>
+    <input type="text" id="popupinput">
+    <ol id="popuplist">
+    </ol>
   </div>
 
   <script type="application/javascript" src="jquery-1.7.2.min.js"></script>

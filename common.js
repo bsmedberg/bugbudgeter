@@ -17,6 +17,7 @@
 var bzapi = 'https://api-dev.bugzilla.mozilla.org/1.2';
 
 var useCached = false;
+var cacheLog = false;
 
 var gConfiguration;
 
@@ -75,6 +76,10 @@ function sortKeys(dict) {
   return r;
 }
 
+function escapeRegExp(str) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
 function addLoginData(data)
 {
   var username = $('#bz_username').val();
@@ -106,6 +111,21 @@ function makeRequest(settings)
   var httpMethod = settings.httpMethod;
   if (httpMethod === undefined)
     httpMethod = 'GET';
+
+  if (httpMethod == 'GET') {
+    var bzapire = new RegExp(escapeRegExp(bzapi));
+    var filere = /[\?\&]/g;
+    var percentre = /%/g;
+    var cacheURL = url.replace(bzapire, 'cache').replace(filere, '_').replace(percentre, '%25');
+    var cacheURL = cacheURL.match(/.{1,200}/g).join('/');
+
+    if (useCached) {
+      url = cacheURL;
+    }
+    else if (cacheLog) {
+      console.log("Please cache " + url + " as " + cacheURL);
+    }
+  }
   
   $.ajax({
     type: httpMethod,
@@ -124,33 +144,15 @@ function makeRequest(settings)
   });
 }
 
-if (useCached) {
-  getConfiguration = function getConfiguration_cached(cb)
-  {
-    $.ajax({
-      url: 'configuration',
-      dataType: 'json',
-      success: function(data) {
-        gConfiguration = data;
-        cb();
-      },
-      error: function(xhr, statustext, e) {
-        log("Error retreiving data: " + statustext + ": " + e + "response text: " + xhr.responseText);
-      }
-    });
-  }
-}
-else {
-  getConfiguration = function getConfiguration_live(cb)
-  {
-    makeRequest({
-      method: 'configuration',
-      success: function(data) {
-        gConfiguration = data;
-        cb();
-      }
-    });
-  }
+function getConfiguration(cb)
+{
+  makeRequest({
+    method: 'configuration',
+    success: function(data) {
+      gConfiguration = data;
+      cb();
+    }
+  });
 }
 
 $(document).on("click", '.expando', function() {
@@ -215,4 +217,74 @@ $(document).on('input', '.tablefilter', function() {
     totaltext = "Showing " + shown + " of " + rows.length;
   }
   $(this).nextAll('.filtertotal').text(totaltext);
+});
+
+var gCurPopup;
+
+/**
+ * Open a list popup under a specified element.
+ * {
+ *   element: el,
+ *   list: [options],
+ *   value: currentValue,
+ *   listOnly: true/false
+ *   success: function(newvalue)
+ *  }
+ */
+function openPopup(popup)
+{
+  gCurPopup = popup;
+
+  if (popup.listOnly) {
+    $('#popupinput').hide();
+  }
+  else {
+    $('#popupinput').show().val(popup.value);
+  }
+
+  var o = $(popup.element).offset();
+  var list = $('#popuplist');
+  list.empty();
+  $.each(popup.list, function(i, label) {
+    var li = $('<li>').text(label);
+    if (label == popup.value) {
+      li.attr('active', 'active');
+    }
+    list.append(li);
+  });
+  var pos = {top: o.top + $(popup.element).height(),
+             left: o.left};
+  $('#popup').show().offset(pos);
+}
+
+function closePopup()
+{
+  gCurPopup = null;
+  $('#popup').hide();
+}
+
+$(document).on('keypress', closePopup);
+$(document).on('click', function(ev) {
+  if (ev.isDefaultPrevented()) {
+    return;
+  }
+  if ($(ev.target).closest('#popup').length == 0) {
+    closePopup();
+  }
+});
+
+$(document).on('click', '#popuplist li', function() {
+  if (!gCurPopup)
+    return;
+  var value = $(this).text();
+  gCurPopup.success(value);
+  closePopup();
+});
+
+$('#popupinput').on('change', function() {
+  if (!gCurPopup)
+    return;
+  var value = $(this).val();
+  gCurPopup.success(value);
+  closePopup();
 });

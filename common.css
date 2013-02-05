@@ -61,3 +61,44 @@ dl.tablelist > dt {
   clear: left;
   float: left;
 }
+
+#popup {
+  width: 80px;
+  display: none;
+  position: absolute;
+  border: 1px solid #CCC;
+  background-color: #EEE;
+}
+
+#popupinput {
+  width: 66px;
+  border: 1px solid #CCC;
+}
+
+#popuplist {
+  padding: 1px;
+  list-style-type: none;
+}
+
+#popuplist li {
+  margin: 1px;
+  border-bottom: 1px solid #CCC;
+}
+#popuplist li[active] {
+  font-weight: bold;
+}
+
+#popuplist li:hover {
+  background-color: #FFC;
+}
+
+#popupclose {
+  font-size: 10px;
+  display: block;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  width: 16px;
+  height: 16px;
+  color: black;
+}
