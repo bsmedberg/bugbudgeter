@@ -174,10 +174,11 @@ function fetchBugs()
     if (components !== null) {
       q["component"] = components;
     }
-    for (var version = gCurrentTracking;
-         version > gCurrentTracking - 3;
-         --version) {
-      q["cf_tracking_firefox" + version] = "+";
+    for (var i = 0; i < 3; ++i) {
+      var version = gCurrentTracking - i;
+      q["field0-0-" + i] = 'cf_tracking_firefox' + version;
+      q["type0-0-" + i] = 'equals';
+      q["value0-0-" + i] = '+';
     }
     qlist.push(q);
   });
@@ -187,6 +188,7 @@ function fetchBugs()
       "resolution": "---",
       "whiteboard": tag,
       "whiteboard_type": "contains",
+      "include_fields": "id",
     };
     qlist.push(q);
   });
@@ -277,28 +279,30 @@ function makeBugPriority(bug)
 
 function setupTable()
 {
+  var i;
+
   if (gPending > 0 || gPendingShards > 0) {
     return;
   }
 
   var insertBefore = $('#meta-th');
   $.each(kWhiteboardTags, function(tag) {
-    insertBefore.before($('<th>').text(tag));
+    insertBefore.before($('<th>').addClass('bugwb-' + tag).attr('colid', 'bugwb-' + tag).text(tag));
   });
 
   $.each([gCurrentTracking - 2, gCurrentTracking - 1, gCurrentTracking],
     function(i, tracking) {
-      insertBefore.before($('<th>').text('t-' + tracking).attr("title", "tracking-firefox-" + tracking));
+      insertBefore.before($('<th>').addClass('bugtracking-' + tracking).attr('colid', 'bugtracking-' + tracking).text('t-' + tracking).attr("title", "tracking-firefox-" + tracking));
     });
 
   var rowTemplate = $('<tr><td class="bugid"><a class="buglink"><td class="bugStatus"><td class="bugP"><td class="bugComponent"><td class="bugOwner"><td class="bugSummary">');
   $.each(kWhiteboardTags, function(tag) {
-    rowTemplate.append($('<td class="bugwb">').attr('wbtag', tag));
+    rowTemplate.append($('<td class="bugwb">').addClass('bugwb-' + tag).attr('wbtag', tag));
   });
   $.each([gCurrentTracking - 2, gCurrentTracking - 1, gCurrentTracking],
-         function(i, tracking) {
-    rowTemplate.append($('<td class="bugtracking">').attr('tracking', tracking));
-  });
+    function(i, tracking) {
+      rowTemplate.append($('<td class="bugtracking">').addClass('bugtracking-' + tracking).attr('tracking', tracking));
+    });
   rowTemplate.append($('<td class="bugMeta"><td class="bugChanged">'));
 
   var tbody = $('#bugsbody');
@@ -310,12 +314,54 @@ function setupTable()
 
   });
 
+  $.tablesorter.addParser({
+    id: 'trackingflag',
+    is: function() { return false; },
+    format: function(s) {
+      switch (s) {
+      case "+": return 0;
+      case "?": return 1;
+      case "-": return 3;
+      case "": return 4;
+      default: return 2;
+      }
+    },
+    type: 'numeric',
+  });
+  $.tablesorter.addParser({
+    id: 'pflag',
+    is: function() { return false; },
+    format: function(s) {
+      var m = /^P(\d)$/.exec(s);
+      if (m == null) {
+        return 0;
+      }
+      return parseInt(m[1]);
+    },
+    type: 'numeric',
+  });
+
   var defaultSort = {
-    sortList: [[2, 0], [0, 0]],
-    headers: {},
+    sortList: [[2, 0], [0, 1]],
+    // sortForce: [[0, 1]], tablesorter bug
+    headers: {
+      0: {sorter: 'digit'},
+      1: {sorter: 'text'},
+      2: {sorter: 'pflag'},
+      3: {sorter: 'text'},
+      4: {sorter: 'text'},
+      5: {sorter: false},
+    }
   };
-  defaultSort.headers[5] = {sorter: false};
-  defaultSort.headers[9 + Object.keys(kWhiteboardTags).length] = {sorter: false};
+  var tagCount = Object.keys(kWhiteboardTags).length;
+  for (i = 6; i < 6 + tagCount; ++i) {
+    defaultSort.headers[i] = {sorter: 'text'};
+  }
+  for (i = 6 + tagCount; i < 9 + tagCount; ++i) {
+    defaultSort.headers[i] = {sorter: 'trackingflag'};
+  }
+  defaultSort.headers[9 + tagCount] = {sorter: false};
+  defaultSort.headers[10 + tagCount] = {sorter: 'isoDate'};
 
   $('.tablesorter').tablesorter(defaultSort);
 

@@ -60,17 +60,23 @@
 
   <p><input type="text" placeholder="Enter text to filter bugs" class="tablefilter"> <span class="filtertotal"></span>
 
+  <div class="columnselector">
+    <input class="columnselectorbutton" type="button" value="Select Columns...">
+    <ol>
+    </ol>
+  </div>
+
   <table id="bugs" class="datatable tablesorter">
     <thead>
       <tr>
-        <th>Bug#
-        <th title="Status">S
-        <th title="Priority">P
-        <th>Product/Component
-        <th>Owner
-        <th>Summary
-        <th id="meta-th" title="Attachments, flags, keywords, whiteboard, and all that stuff">Meta
-        <th>Last Changed
+        <th colid="bugid" class="bugid">Bug#
+        <th colid="bugStatus" class="bugStatus" title="Status">S
+        <th colid="bugP" class="bugP" title="Priority">P
+        <th colid="bugComponent" class="bugComponent" title="Product/Component">P/C
+        <th colid="bugOwner" class="bugOwner">Owner
+        <th colid="bugSummary" class="bugSummary">Summary
+        <th colid="bugMeta" class="bugMeta" id="meta-th" title="Attachments, flags, keywords, whiteboard, and all that stuff">Meta
+        <th colid="bugChanged" class="bugChanged">Last Changed
     <tbody id="bugsbody">
   </table>
 

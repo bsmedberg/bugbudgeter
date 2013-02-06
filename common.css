@@ -40,6 +40,10 @@ body {
   margin: 0px;
 }
 
+.tablesorter thead th {
+  padding-right: 14px !important;
+}
+
 .expando {
   padding-left: 15px;
   background-image: url(tablesorter/themes/blue/asc.gif);
@@ -101,4 +105,20 @@ dl.tablelist > dt {
   width: 16px;
   height: 16px;
   color: black;
+}
+
+.columnselectorbutton {
+  border: 1px solid #CCC;
+  background-color: #EEE;
+  color: #333;
+}
+
+.columnselector ol {
+  position: absolute;
+  border: 1px solid #CCC;
+  background-color: #EEE;
+  color: black;
+  padding: 2px;
+  display: none;
+  margin: 0px;
 }

@@ -288,3 +288,48 @@ $('#popupinput').on('change', function() {
   gCurPopup.success(value);
   closePopup();
 });
+
+$(document).on('click', '.columnselectorbutton', function() {
+  var self = $(this).closest('.columnselector');
+  var list = $('ol', self);
+  if (self.hasClass('open')) {
+    self.removeClass('open');
+    list.slideUp('fast');
+  }
+  else {
+    self.addClass('open');
+    list.slideDown('fast');
+
+    var table = $('table').filter(function() {
+      return $(this).isAfter(self);
+    }).first();
+
+    var headings = $('thead th', table);
+    list.empty();
+    headings.each(function() {
+      var cls = $(this).attr('colid');
+      var cbox = $('<input type="checkbox" class="columnselectorcbox">').val(cls);
+      if (!$(this).hasClass('hidden')) {
+        cbox.attr('checked', 'checked');
+      }
+      list.append($('<li>').
+        append(cbox).
+        append($('<span>').text($(this).text())));
+    });
+  }
+});
+
+$(document).on('change', '.columnselectorcbox', function() {
+  var self = $(this).closest('.columnselector');
+  var table = $('table').filter(function() {
+    return $(this).isAfter(self);
+  }).first();
+  var cls = $(this).val();
+
+  if ($(this).attr('checked') === undefined) {
+    $('.' + cls, table).addClass('hidden');
+  }
+  else {
+    $('.' + cls, table).removeClass('hidden');
+  }
+});
