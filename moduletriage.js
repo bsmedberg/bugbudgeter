@@ -77,6 +77,8 @@ var gPendingShards;
 function fetchQ()
 {
   $('#login').fadeOut();
+  $('#progressbar').progressbar({value: false});
+
   setStatus("Retrieving bugzilla configuration...");
   getConfiguration(function() {
     setFieldData();
@@ -167,20 +169,25 @@ function fetchBugs()
     }
     qlist.push(q);
 
-    q = {
-      "product": product,
-      "include_fields": "id",
+    for (var version = gCurrentTracking - 2;
+         version <= gCurrentTracking;
+         ++version) {
+      q = {
+        "product": product,
+        "include_fields": "id"
+      };
+      if (components !== null) {
+        q["component"] = components;
+      }
+      q["cf_tracking_firefox" + version] = "+";
+
+      $.each(['wontfix', 'fixed', 'unaffected', 'verified', 'disabled', 'verified disabled'], function(i, status) {
+        q["field0-" + i + "-0"] = 'cf_status_firefox' + version;
+        q["type0-" + i + "-0"] = 'notequals';
+        q["value0-" + i + "-0"] = status;
+      });
+      qlist.push(q);
     };
-    if (components !== null) {
-      q["component"] = components;
-    }
-    for (var i = 0; i < 3; ++i) {
-      var version = gCurrentTracking - i;
-      q["field0-0-" + i] = 'cf_tracking_firefox' + version;
-      q["type0-0-" + i] = 'equals';
-      q["value0-0-" + i] = '+';
-    }
-    qlist.push(q);
   });
 
   $.each(kFetchTags, function(i, tag) {
@@ -221,6 +228,11 @@ function fetchShard(ids)
         gBugs[bug.id] = bug;
       });
       --gPendingShards;
+      if (gPending == 0) {
+        var total = Object.keys(gPendingMap).length;
+        var done = Object.keys(gBugs).length;
+        $('#progressbar').progressbar('value', done / total * 100);
+      } 
       setupTable();
     }
   });
@@ -366,6 +378,7 @@ function setupTable()
   $('.tablesorter').tablesorter(defaultSort);
 
   $('#body').removeClass('hidden');
+  $('#progressbar').addClass('hidden');
   setStatus();
 }
 
