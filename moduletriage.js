@@ -15,9 +15,10 @@
  */
 
 var kComponents = {
-  "Core": ["Plug-ins"],
-
 /*
+  "Core": ["Plug-ins"],
+*/
+
   "Plugins": null, // all bugs in "Plugins"
   "Core": [
     "Plug-ins",
@@ -36,7 +37,6 @@ var kComponents = {
   "Firefox": [
     "WinQual Reports",
   ],
-*/
 };
 
 var kFetchTags = [
@@ -362,7 +362,7 @@ function setupTable()
   });
 
   var defaultSort = {
-    sortList: [[2, 0], [0, 1]],
+    sortList: [[3, 0], [0, 1]],
     // sortForce: [[0, 1]], tablesorter bug
     headers: {
       0: {sorter: 'digit'},
