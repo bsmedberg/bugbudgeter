@@ -307,7 +307,7 @@ function setupTable()
       insertBefore.before($('<th>').addClass('bugtracking-' + tracking).attr('colid', 'bugtracking-' + tracking).text('t-' + tracking).attr("title", "tracking-firefox-" + tracking));
     });
 
-  var rowTemplate = $('<tr><td class="bugid"><a class="buglink"><td class="bugStatus"><td class="bugP"><td class="bugComponent"><td class="bugOwner"><td class="bugSummary">');
+  var rowTemplate = $('<tr><td class="bugid"><a class="buglink"><td class="bugSecurity"><td class="bugStatus"><td class="bugP"><td class="bugComponent"><td class="bugOwner"><td class="bugSummary">');
   $.each(kWhiteboardTags, function(tag) {
     rowTemplate.append($('<td class="bugwb">').addClass('bugwb-' + tag).attr('wbtag', tag));
   });
@@ -352,28 +352,37 @@ function setupTable()
     },
     type: 'numeric',
   });
+  $.tablesorter.addParser({
+    id: 'security',
+    is: function() { return false; },
+    format: function(s, table, cell) {
+      return !$(cell).closest('tr').hasClass('secureBug');
+    },
+    type: 'numeric',
+  });
 
   var defaultSort = {
     sortList: [[2, 0], [0, 1]],
     // sortForce: [[0, 1]], tablesorter bug
     headers: {
       0: {sorter: 'digit'},
-      1: {sorter: 'text'},
-      2: {sorter: 'pflag'},
-      3: {sorter: 'text'},
+      1: {sorter: 'security'},
+      2: {sorter: 'text'},
+      3: {sorter: 'pflag'},
       4: {sorter: 'text'},
-      5: {sorter: false},
+      5: {sorter: 'text'},
+      6: {sorter: false},
     }
   };
   var tagCount = Object.keys(kWhiteboardTags).length;
-  for (i = 6; i < 6 + tagCount; ++i) {
+  for (i = 7; i < 7 + tagCount; ++i) {
     defaultSort.headers[i] = {sorter: 'text'};
   }
-  for (i = 6 + tagCount; i < 9 + tagCount; ++i) {
+  for (i = 7 + tagCount; i < 10 + tagCount; ++i) {
     defaultSort.headers[i] = {sorter: 'trackingflag'};
   }
-  defaultSort.headers[9 + tagCount] = {sorter: false};
-  defaultSort.headers[10 + tagCount] = {sorter: 'isoDate'};
+  defaultSort.headers[10 + tagCount] = {sorter: false};
+  defaultSort.headers[11 + tagCount] = {sorter: 'isoDate'};
 
   $('.tablesorter').tablesorter(defaultSort);
 
@@ -435,6 +444,12 @@ function updateRow(bugid)
   var bug = gBugs[bugid];
   var row = bug.row;
   row.find('.buglink').attr('href', 'https://bugzilla.mozilla.org/show_bug.cgi?id=' + bugid).text(bugid);
+  if (bug.groups && bug.groups.length) {
+    row.addClass('secureBug');
+  }
+  else {
+    row.removeClass('securebug');
+  }
   row.children('.bugStatus').text(bug.status.slice(0, 4));
   row.children('.bugP').text(makeBugPriority(bug));
   row.children('.bugComponent').text(bug.product + "/" + bug.component);

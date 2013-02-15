@@ -122,3 +122,19 @@ dl.tablelist > dt {
   display: none;
   margin: 0px;
 }
+
+.bugSecurity {
+  width: 12px;
+  padding: 0px !important;
+}
+
+.secureBug .bugSecurity,
+th.bugSecurity {
+  background-image: url("lock.png");
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+
+.secureBug td {
+  background-color: #FFA !important;
+}
