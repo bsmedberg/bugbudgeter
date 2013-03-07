@@ -27,6 +27,11 @@
   <div id="login">
     <p><em>Your bugzilla password is optional, it allows you to see security bugs which are normally hidden, as well as bug owner email addresses. It is only used locally, not sent to any server other than bugzilla.mozilla.org.</em>
     <form id="loginform" action="#" onsubmit="fetchQ(); return false;"><input type="text" id="bz_username" placeholder="Bugzilla email"><input type="password" id="bz_password" placeholder="Bugzilla password"> <input type="submit" id="fetch" value="Fetch bugs now"></form>
+
+    <p>Select components (edit userconfig.js to change/add):
+      <select name="userpicker" id="userpicker"></select></p>
+
+    <div id="pickerResults"></div>
   </div>
 
   <p id="status">Initializing...</p>
@@ -97,4 +102,5 @@
   <script type="application/javascript" src="js/jquery-ui-1.10.0.custom.js"></script>
   <script type="application/javascript" src="tablesorter/jquery.tablesorter.min.js"></script>
   <script type="text/javascript" src="common.js"></script>
+  <script type="application/javascript" src="userconfig.js"></script>
   <script type="text/javascript" src="moduletriage.js"></script>

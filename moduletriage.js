@@ -14,31 +14,6 @@
  * limitations under the License.
  */
 
-var kComponents = {
-/*
-  "Core": ["Plug-ins"],
-*/
-
-  "Plugins": null, // all bugs in "Plugins"
-  "Core": [
-    "Plug-ins",
-    "XPCOM",
-    "IPC",
-    "js-ctypes",
-    "Preferences: Backend",
-    "Profile: BackEnd",
-    "String",
-  ],
-  "Toolkit": [
-    "Plugin Finder Service",
-    "Startup and Profile System",
-    "XULRunner",
-  ],
-  "Firefox": [
-    "WinQual Reports",
-  ],
-};
-
 var kFetchTags = [
   'CtPDefault',
   'CtPUR',
@@ -49,6 +24,35 @@ var kWhiteboardTags = {
   "CtPDefault": ["P1", "P2", "P3", "-", "?"],
   "Snappy": ["P1", "P2", "P3", "-", "?"]
 }
+
+function setupUserSelector()
+{
+  var s = $('#userpicker');
+
+  $.each(kUserConfig, function(user, config) {
+    s.append($('<option>').val(user).text(user));
+  });
+}
+setupUserSelector();
+
+function displayUserComponents()
+{
+  var user = $('#userpicker').val();
+  var config = kUserConfig[user];
+
+  var t = [];
+  $.each(config, function(module, components) {
+    if (components == null) {
+      t.push(module + ": All components");
+    }
+    else {
+      t.push(module + ': ' + components.join(', '));
+    }
+  });
+  $('#pickerResults').text(t.join('\n'));
+}
+displayUserComponents();
+$('#userpicker').on('change', displayUserComponents);
 
 function makeWhiteboardRE(tag)
 {
@@ -158,7 +162,9 @@ function fetchBugs()
 
   var qlist = []
 
-  $.each(kComponents, function(product, components) {
+  var config = kUserConfig[$('#userpicker').val()];
+
+  $.each(config, function(product, components) {
     var q = {
       "resolution": "---",
       "product": product,

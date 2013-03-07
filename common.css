@@ -138,3 +138,10 @@ th.bugSecurity {
 .secureBug td {
   background-color: #FFA !important;
 }
+
+#pickerResults {
+  border: 1px dotted #CCC;
+  color: #333;
+  white-space: pre-wrap;
+}
+
